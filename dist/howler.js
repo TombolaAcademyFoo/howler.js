@@ -533,7 +533,7 @@
       Howler._howls.push(self);
 
       // If they selected autoplay, add a play event to the load queue.
-      if (self._autoplay && !self.parent.needsIosContextUnlock) {
+      if (self._autoplay && !Howler.needsIosContextUnlock) {
         self._queue.push({
           event: 'play',
           action: function() {
@@ -640,11 +640,11 @@
      * @return {Number}          Sound ID.
      */
     play: function(sprite, internal) {
-      console.log('**** Playing');
-      console.log('**** Needs unlock status= ' + needsIosContextUnlock);
-
       var self = this;
       var id = null;
+
+        console.log('**** Playing');
+        console.log('**** Needs unlock status= ' + Howler.needsIosContextUnlock);
 
       // Determine if a sprite, sound id or nothing was passed
       if (typeof sprite === 'number') {
@@ -652,6 +652,7 @@
         sprite = null;
       } else if (typeof sprite === 'string' && self._state === 'loaded' && !self._sprite[sprite]) {
         // If the passed sprite doesn't exist, do nothing.
+          console.log('**** passed sprite does not exist');
         return null;
       } else if (typeof sprite === 'undefined') {
         // Use the default sound sprite (plays the full audio length).
@@ -679,6 +680,7 @@
 
       // If the sound doesn't exist, do nothing.
       if (!sound) {
+          console.log('**** No sound');
         return null;
       }
 
@@ -691,6 +693,7 @@
       // We also need to wait to make sure we don't run into race conditions with
       // the order of function calls.
       if (self._state !== 'loaded') {
+          console.log('**** Not loaded, waiting');
         // Set the sprite value on this sound.
         sound._sprite = sprite;
 
@@ -722,7 +725,7 @@
       }
 
       // Make sure the AudioContext isn't suspended, and resume it if it is.
-      if(self.parent.needsIosContextUnlock) {
+      if(Howler.needsIosContextUnlock) {
           //TODO:!!!!
           console.log('**** Needs context unlocking - TODO');
           return sound._id;
