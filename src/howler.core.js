@@ -278,6 +278,8 @@
     _enableMobileAudio: function() {
       var self = this || Howler;
 
+      console.log('**** Enable Audio');
+
       // Only run this on mobile devices if audio isn't already eanbled.
       var isMobile = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk|Mobi/i.test(self._navigator && self._navigator.userAgent);
       var isTouch = !!(('ontouchend' in window) || (self._navigator && self._navigator.maxTouchPoints > 0) || (self._navigator && self._navigator.msMaxTouchPoints > 0));
