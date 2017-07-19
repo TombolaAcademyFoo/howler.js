@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.4
+ *  howler.js v2.0.5
  *  howlerjs.com
  *
  *  (c) 2013-2017, James Simpson of GoldFire Studios
@@ -51,6 +51,11 @@
       // Set to false to disable the auto iOS enabler.
       self.mobileAutoEnable = true;
 
+      self._isIosSafari = isSafari() && isIOS();
+      self._needsIosContextUnlock = self.isIosSafari;
+      console.log('************** Init ************** ');
+      console.log(self);
+      console.log('********************************** ');
       // Setup the various state values for global tracking.
       self._setup();
 
@@ -176,6 +181,12 @@
       return (this || Howler)._codecs[ext.replace(/^x-/, '')];
     },
 
+    get needsIosContextUnlock() {
+      var unlockNeeded =  (this || Howler)._needsIosContextUnlock
+        console.log('**** Unlock needed= '+ unlockNeeded);
+      return unlockNeeded;
+    },
+
     /**
      * Setup various state values for global tracking.
      * @return {Howler}
@@ -278,7 +289,7 @@
     _enableMobileAudio: function() {
       var self = this || Howler;
 
-      console.log('**** Enable Audio');
+      console.log('**** Enabling Audio');
 
       // Only run this on mobile devices if audio isn't already eanbled.
       var isMobile = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk|Mobi/i.test(self._navigator && self._navigator.userAgent);
@@ -509,7 +520,7 @@
       Howler._howls.push(self);
 
       // If they selected autoplay, add a play event to the load queue.
-      if (self._autoplay) {
+      if (self._autoplay && !self.parent.needsIosContextUnlock) {
         self._queue.push({
           event: 'play',
           action: function() {
@@ -616,6 +627,9 @@
      * @return {Number}          Sound ID.
      */
     play: function(sprite, internal) {
+      console.log('**** Playing');
+      console.log('**** Needs unlock status= ' + needsIosContextUnlock);
+
       var self = this;
       var id = null;
 
@@ -695,7 +709,12 @@
       }
 
       // Make sure the AudioContext isn't suspended, and resume it if it is.
-      if (self._webAudio) {
+      if(self.parent.needsIosContextUnlock) {
+          //TODO:!!!!
+          console.log('**** Needs context unlocking - TODO');
+          return sound._id;
+      }
+      else if (self._webAudio) {
         Howler._autoResume();
       }
 
@@ -718,6 +737,7 @@
       if (self._webAudio) {
         // Fire this when the sound is ready to play to begin Web Audio playback.
         var playWebAudio = function() {
+            console.log('**** Play WebAudio');
           self._refreshBuffer(sound);
 
           // Setup the playback params.
@@ -758,6 +778,7 @@
       } else {
         // Fire this when the sound is ready to play to begin HTML5 Audio playback.
         var playHtml5 = function() {
+          console.log('**** Play HTML 5');
           node.currentTime = seek;
           node.muted = sound._muted || self._muted || Howler._muted || node.muted;
           node.volume = sound._volume * Howler.volume();
@@ -2151,6 +2172,19 @@
     }
   };
 
+  var isIOS = function(){
+    return /iP(hone|od|ad)/.test(Howler._navigator && Howler._navigator.platform);
+  };
+
+  var getVersion = function(){
+    var appVersion = Howler._navigator && Howler._navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
+    return appVersion ? parseInt(appVersion[1], 10) : null;
+  };
+
+  var isSafari = function(){
+      return /safari/.test(Howler._navigator && Howler._navigator.userAgent.toLowerCase());
+  };
+
   /**
    * Setup the audio context when available, or switch to HTML5 Audio mode.
    */
@@ -2170,11 +2204,11 @@
 
     // Check if a webview is being used on iOS8 or earlier (rather than the browser).
     // If it is, disable Web Audio as it causes crashing.
-    var iOS = (/iP(hone|od|ad)/.test(Howler._navigator && Howler._navigator.platform));
-    var appVersion = Howler._navigator && Howler._navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
-    var version = appVersion ? parseInt(appVersion[1], 10) : null;
+    var iOS = isIOS();
+    var version = getVersion();
+
     if (iOS && version && version < 9) {
-      var safari = /safari/.test(Howler._navigator && Howler._navigator.userAgent.toLowerCase());
+      var safari = isSafari();
       if (Howler._navigator && Howler._navigator.standalone && !safari || Howler._navigator && !Howler._navigator.standalone && !safari) {
         Howler.usingWebAudio = false;
       }
@@ -2225,7 +2259,7 @@
 /*!
  *  Spatial Plugin - Adds support for stereo and 3D audio where Web Audio is supported.
  *  
- *  howler.js v2.0.4
+ *  howler.js v2.0.5
  *  howlerjs.com
  *
  *  (c) 2013-2017, James Simpson of GoldFire Studios
