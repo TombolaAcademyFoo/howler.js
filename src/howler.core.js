@@ -15,6 +15,19 @@
   /** Global Methods **/
   /***************************************************************************/
 
+    var isIOS = function(navigator){
+        return /iP(hone|od|ad)/.test(navigator && navigator.platform);
+    };
+
+    var getVersion = function(navigator){
+        var appVersion = navigator && navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
+        return appVersion ? parseInt(appVersion[1], 10) : null;
+    };
+
+    var isSafari = function(navigator){
+        return /safari/.test(navigator && navigator.userAgent.toLowerCase());
+    };
+
   /**
    * Create the global controller. All contained methods and properties apply
    * to all sounds that are currently playing or will be in the future.
@@ -51,8 +64,8 @@
       // Set to false to disable the auto iOS enabler.
       self.mobileAutoEnable = true;
 
-      self._isIosSafari = isSafari() && isIOS();
-      self._needsIosContextUnlock = self.isIosSafari;
+      self._isIosSafari = isSafari(self._navigator) && isIOS(self._navigator);
+      self._needsIosContextUnlock = self._isIosSafari;
       console.log('************** Init ************** ');
       console.log(self);
       console.log('********************************** ');
@@ -2172,18 +2185,6 @@
     }
   };
 
-  var isIOS = function(){
-    return /iP(hone|od|ad)/.test(Howler._navigator && Howler._navigator.platform);
-  };
-
-  var getVersion = function(){
-    var appVersion = Howler._navigator && Howler._navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
-    return appVersion ? parseInt(appVersion[1], 10) : null;
-  };
-
-  var isSafari = function(){
-      return /safari/.test(Howler._navigator && Howler._navigator.userAgent.toLowerCase());
-  };
 
   /**
    * Setup the audio context when available, or switch to HTML5 Audio mode.
@@ -2204,11 +2205,11 @@
 
     // Check if a webview is being used on iOS8 or earlier (rather than the browser).
     // If it is, disable Web Audio as it causes crashing.
-    var iOS = isIOS();
-    var version = getVersion();
+    var iOS = isIOS(Howler._navigator);
+    var version = getVersion(Howler._navigator);
 
     if (iOS && version && version < 9) {
-      var safari = isSafari();
+      var safari = isSafari(Howler._navigator);
       if (Howler._navigator && Howler._navigator.standalone && !safari || Howler._navigator && !Howler._navigator.standalone && !safari) {
         Howler.usingWebAudio = false;
       }
