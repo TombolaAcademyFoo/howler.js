@@ -59,6 +59,7 @@
         oscillator.onended = function() {
             oscillator.disconnect(0);
             //TODO: set unlock flag???
+            Howler.is
             console.log('Oscillator - Done');
             callback();
         };
@@ -109,7 +110,7 @@
       self.mobileAutoEnable = true;
 
       self._isIosSafari = isSafari(self._navigator) && isIOS(self._navigator);
-      self._needsIosContextUnlock = self._isIosSafari;
+      self.needsIosContextUnlock = self._isIosSafari;
       console.log('************** Init ************** ');
       console.log(self);
       console.log('********************************** ');
@@ -242,6 +243,11 @@
       var unlockNeeded =  (this || Howler)._needsIosContextUnlock
         console.log('**** Unlock needed= '+ unlockNeeded);
       return unlockNeeded;
+    },
+
+    set needsIosContextUnlock(newValue) {
+        (this || Howler)._needsIosContextUnlock = newValue
+        console.log('**** Setting unlock needed status=' + newValue);
     },
 
     /**
@@ -382,6 +388,7 @@
             // Update the unlocked state and prevent this check from happening again.
             self._mobileEnabled = true;
             self.mobileAutoEnable = false;
+            Howler.needsIosContextUnlock = false;
             document.removeEventListener('touchend', unlock, true);
         });
       };
