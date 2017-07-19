@@ -14,7 +14,7 @@
 
   /** Global Methods **/
   /***************************************************************************/
-
+    var SAMPLE_RATE = 44100;
     var isIOS = function(navigator){
         return /iP(hone|od|ad)/.test(navigator && navigator.platform);
     };
@@ -26,6 +26,50 @@
 
     var isSafari = function(navigator){
         return /safari/.test(navigator && navigator.userAgent.toLowerCase());
+    };
+
+    var unlockGeneric = function(ctx, scratchBuffer, callback) {
+      console.log('**** unlock generic')
+        // // Create an empty buffer.
+        // var source = ctx.createBufferSource();
+        // source.buffer = scratchBuffer;
+        // source.connect(ctx.destination);
+        // // Setup a timeout to check that we are unlocked on the next event loop.
+        // source.onended = function() {
+        //     source.disconnect(0);
+        //     callback();
+        // };
+        //
+        // // Play the empty buffer.
+        // if (typeof source.start === 'undefined') {
+        //     source.noteOn(0);
+        // } else {
+        //     source.start(0);
+        // }
+        //
+        // // Calling resume() on a stack initiated by user gesture is what actually unlocks the audio on Android Chrome >= 55.
+        // if (typeof ctx.resume === 'function') {
+        //     ctx.resume();
+        // }
+
+        var oscillator = ctx.createOscillator();
+        oscillator.frequency.value = 440;
+        oscillator.connect(ctx.destination);
+
+        oscillator.onended = function() {
+            oscillator.disconnect(0);
+            //TODO: set unlock flag???
+            console.log('Oscillator - Done');
+            callback();
+        };
+
+        console.log('Oscillator - Start');
+        oscillator.start(0);
+        oscillator.stop(0.1);
+
+        if (typeof ctx.resume === 'function') {
+            ctx.resume(); //TODO - disable for iOS - Safari?
+        }
     };
 
   /**
@@ -316,7 +360,7 @@
       // Some mobile devices/platforms have distortion issues when opening/closing tabs and/or web views.
       // Bugs in the browser (especially Mobile Safari) can cause the sampleRate to change from 44100 to 48000.
       // By calling Howler.unload(), we create a new AudioContext with the correct sampleRate.
-      if (!self._mobileUnloaded && self.ctx.sampleRate !== 44100) {
+      if (!self._mobileUnloaded && self.ctx.sampleRate !== SAMPLE_RATE) {
         self._mobileUnloaded = true;
         self.unload();
       }
@@ -332,34 +376,12 @@
         // Fix Android can not play in suspend state.
         Howler._autoResume();
 
-        // Create an empty buffer.
-        var source = self.ctx.createBufferSource();
-        source.buffer = self._scratchBuffer;
-        source.connect(self.ctx.destination);
-
-        // Play the empty buffer.
-        if (typeof source.start === 'undefined') {
-          source.noteOn(0);
-        } else {
-          source.start(0);
-        }
-
-        // Calling resume() on a stack initiated by user gesture is what actually unlocks the audio on Android Chrome >= 55.
-        if (typeof self.ctx.resume === 'function') {
-          self.ctx.resume();
-        }
-
-        // Setup a timeout to check that we are unlocked on the next event loop.
-        source.onended = function() {
-          source.disconnect(0);
-
-          // Update the unlocked state and prevent this check from happening again.
-          self._mobileEnabled = true;
-          self.mobileAutoEnable = false;
-
-          // Remove the touch start listener.
-          document.removeEventListener('touchend', unlock, true);
-        };
+        unlockGeneric(self.ctx, self._scratchBuffer, function(){
+            // Update the unlocked state and prevent this check from happening again.
+            self._mobileEnabled = true;
+            self.mobileAutoEnable = false;
+            document.removeEventListener('touchend', unlock, true);
+        });
       };
 
       // Setup a touch start listener to attempt an unlock in.
@@ -2189,19 +2211,23 @@
   };
 
 
+  var instantiateAudioContext = function(){
+      if (typeof AudioContext !== 'undefined') {
+          Howler.ctx = new AudioContext();
+      } else if (typeof webkitAudioContext !== 'undefined') {
+          Howler.ctx = new webkitAudioContext();
+      } else {
+          Howler.usingWebAudio = false;
+      }
+  }
+
   /**
    * Setup the audio context when available, or switch to HTML5 Audio mode.
    */
   var setupAudioContext = function() {
     // Check if we are using Web Audio and setup the AudioContext if we are.
     try {
-      if (typeof AudioContext !== 'undefined') {
-        Howler.ctx = new AudioContext();
-      } else if (typeof webkitAudioContext !== 'undefined') {
-        Howler.ctx = new webkitAudioContext();
-      } else {
-        Howler.usingWebAudio = false;
-      }
+        instantiateAudioContext();
     } catch(e) {
       Howler.usingWebAudio = false;
     }
