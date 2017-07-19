@@ -362,6 +362,7 @@
       // By calling Howler.unload(), we create a new AudioContext with the correct sampleRate.
       if (!self._mobileUnloaded && self.ctx.sampleRate !== SAMPLE_RATE) {
         self._mobileUnloaded = true;
+        console.log('**** Unloading');
         self.unload();
       }
 
@@ -373,6 +374,7 @@
       // then check if the audio actually played to determine if
       // audio has now been unlocked on iOS, Android, etc.
       var unlock = function() {
+          console.log('**** Unlock Main');
         // Fix Android can not play in suspend state.
         Howler._autoResume();
 
