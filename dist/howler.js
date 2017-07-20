@@ -248,12 +248,13 @@
     },
 
     set needsIosContextUnlock(newValue) {
-        if(! self._isIosSafari){
+        var howlerInstance  = (this || Howler)
+        if(! howlerInstance._isIosSafari){
           //don't need the extra unlocking on other devices
           newValue = false;
         }
-        (this || Howler)._needsIosContextUnlock = newValue
-        console.log('**** Setting unlock needed status=' + newValue);
+        howlerInstance._needsIosContextUnlock = newValue
+        console.log('**** Setting unlock needed status=' +  howlerInstance._needsIosContextUnlock);
     },
 
     /**
