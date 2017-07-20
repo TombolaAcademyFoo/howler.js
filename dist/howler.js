@@ -116,7 +116,7 @@
       console.log('********************************** ');
       // Setup the various state values for global tracking.
       self._setup();
-
+        console.log('**** HOWLER INIT - DONE');
       return self;
     },
 
@@ -140,6 +140,7 @@
 
         // Don't update any of the nodes if we are muted.
         if (self._muted) {
+            console.log('**** HOWLER VOLUME - DONE (muted)');
           return self;
         }
 
@@ -164,7 +165,7 @@
             }
           }
         }
-
+          console.log('**** HOWLER VOLUME - DONE');
         return self;
       }
 
@@ -206,7 +207,7 @@
           }
         }
       }
-
+        console.log('**** HOWLER MUTE - DONE');
       return self;
     },
 
@@ -228,6 +229,7 @@
         setupAudioContext();
       }
 
+        console.log('**** HOWLER UNLOAD - DONE');
       return self;
     },
 
@@ -237,7 +239,6 @@
      * @return {Boolean}
      */
     codecs: function(ext) {
-        console.log('**** HOWLER CODECS');
       return (this || Howler)._codecs[ext.replace(/^x-/, '')];
     },
 
@@ -301,7 +302,7 @@
       if (!self.noAudio) {
         self._setupCodecs();
       }
-
+        console.log('**** HOWLER _SETUP - DONE') ;
       return self;
     },
 
@@ -317,10 +318,12 @@
       try {
         audioTest = (typeof Audio !== 'undefined') ? new Audio() : null;
       } catch (err) {
+          console.log('**** HOWLER _SETUPCODECS - ERROR') ;
         return self;
       }
 
       if (!audioTest || typeof audioTest.canPlayType !== 'function') {
+          console.log('**** HOWLER _SETUPCODECS - DONE (No support)') ;
         return self;
       }
 
@@ -346,7 +349,7 @@
         dolby: !!audioTest.canPlayType('audio/mp4; codecs="ec-3"').replace(/^no$/, ''),
         flac: !!(audioTest.canPlayType('audio/x-flac;') || audioTest.canPlayType('audio/flac;')).replace(/^no$/, '')
       };
-
+        console.log('**** HOWLER _SETUPCODECS - DONE') ;
       return self;
     },
 
@@ -364,6 +367,7 @@
       var isMobile = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk|Mobi/i.test(self._navigator && self._navigator.userAgent);
       var isTouch = !!(('ontouchend' in window) || (self._navigator && self._navigator.maxTouchPoints > 0) || (self._navigator && self._navigator.msMaxTouchPoints > 0));
       if (self._mobileEnabled || !self.ctx || (!isMobile && !isTouch)) {
+          console.log('**** HOWLER _ENABLEMOBILEAUDIO - DONE (not touch device)') ;
         return;
       }
 
@@ -401,7 +405,7 @@
 
       // Setup a touch start listener to attempt an unlock in.
       document.addEventListener('touchend', unlock, true);
-
+        console.log('**** HOWLER _ENABLEMOBILEAUDIO - DONE') ;
       return self;
     },
 
@@ -413,8 +417,23 @@
     _autoSuspend: function() {
       var self = this;
         console.log('**** HOWLER _AUTOSUSPEND') ;
-      if (!self.autoSuspend || !self.ctx || typeof self.ctx.suspend === 'undefined' || !Howler.usingWebAudio) {
+      if (!self.autoSuspend) {
+          console.log('**** HOWLER _AUTOSUSPEND - DONE (Not suspeneded) ') ;
         return;
+      }
+      if(!Howler.usingWebAudio){
+          console.log('**** HOWLER _AUTOSUSPEND - DONE (Not using web audio) ') ;
+          return;
+      }
+
+      if(!self.ctx) {
+        console.log('**** HOWLER _AUTOSUSPEND - DONE (no context) ') ;
+        return;
+      }
+
+      if(typeof self.ctx.suspend === 'undefined') {
+          console.log('**** HOWLER _AUTOSUSPEND - DONE (context unsuspendable) ') ;
+          return;
       }
 
       // Check if any sounds are playing.
@@ -449,7 +468,7 @@
           }
         });
       }, 30000);
-
+        console.log('**** HOWLER _AUTOSUSPEND - DONE') ;
       return self;
     },
 
@@ -461,6 +480,7 @@
       var self = this;
         console.log('**** HOWLER _AUTORESUME') ;
       if (!self.ctx || typeof self.ctx.resume === 'undefined' || !Howler.usingWebAudio) {
+          console.log('**** HOWLER _AUTORESUME - DONE (non-resumable)') ;
         return;
       }
 
@@ -484,7 +504,7 @@
       } else if (self.state === 'suspending') {
         self._resumeAfterSuspend = true;
       }
-
+        console.log('**** HOWLER _AUTORESUME - DONE') ;
       return self;
     }
   };
